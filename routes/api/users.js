@@ -28,9 +28,49 @@ router.post('/users', (req, res, next) => {
   }).catch(next)
 })
 
+// Updat user profile
+router.put('/user', auth.required, (req, res, next) => {
+  User.findById(req.payload.id).then(user => {
+    if (!user)
+      return res.sendStatus(401)
 
-// Pending:
-// put '/user'
-// post '/users/login'
+    if (typeof req.body.user.username !== 'undefined')
+      user.username = req.body.user.username
+
+    if (typeof req.body.user.email !== 'undefined')
+      user.email = req.body.user.email
+
+    if (typeof req.body.user.password !== 'undefined')
+      user.setPassword(req.body.user.password)
+
+    if (typeof req.body.user.bio !== 'undefined')
+      user.bio = req.body.user.bio
+
+    if (typeof req.body.user.image !== 'undefined')
+      user.image = req.body.user.image
+
+    return user.save().then(() => res.json({ user: user.toAuthJSON }))
+  }).catch(next)
+})
+
+// Login user
+router.post('/user/login', (req, res, next) => {
+  if (!req.body.user.email)
+    return res.status(422).json({ errors: {email: 'cannot be blank'} })
+
+  if (!req.body.user.password)
+    return res.status(422).json({ errors: {password: 'cannot be blank'} })
+
+  passport.authenticate('local', { session: false }, (err, user, info) => {
+    if (err)
+      return next(err)
+
+    if (user) {
+      user.token = user.generateJWT()
+
+      return res.join({ user: user.toAuthJSON() })
+    }
+  })(req, res, next)
+})
 
 module.exports = router
