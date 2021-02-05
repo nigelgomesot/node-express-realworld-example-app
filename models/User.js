@@ -6,7 +6,7 @@ var secret = require('../config').secret
 
 var UserSchema = new mongoose.Schema({
   username: { type: String, lowercase: true, unique: true, required: [true, 'cannot be blank'], match: [/^[a-zA-Z0-9]+$/, 'is invalid'], index: true },
-  username: { type: String, lowercase: true, unique: true, required: [true, 'cannot be blank'], match: [/\S+@\S+\.\S+/, 'is invalid'], index: true },
+  email: { type: String, lowercase: true, unique: true, required: [true, 'cannot be blank'], match: [/\S+@\S+\.\S+/, 'is invalid'], index: true },
   bio: String,
   image: String,
   hash: String,
@@ -29,18 +29,18 @@ UserSchema.methods.validPassword = password => {
 UserSchema.methods.generateJWT = () => {
   const today = new Date()
   let exp = new Date(today)
-  exp.setDate  = (today.getDate() + 60)
+  exp.setDate(today.getDate() + 60)
 
   return jwt.sign({
     id: this._id,
     username: this.username,
-    exp = parseInt(exp.getTime / 1000)
+    exp: parseInt(exp.getTime() / 1000)
   }, secret)
 }
 
 UserSchema.methods.toAuthJSON = () => {
   return {
-    username = this.username,
+    username: this.username,
     email: this.email,
     token: this.generateJWT(),
     bio: this.bio,
