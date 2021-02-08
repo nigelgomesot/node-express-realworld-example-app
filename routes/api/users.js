@@ -16,7 +16,7 @@ router.get('/user', auth.required, (req, res, next) => {
 })
 
 // Create user profile
-router.post('/users', (req, res, next) => {
+router.post('/auth/register', (req, res, next) => {
   const user = new User()
 
   user.username = req.body.user.username
@@ -54,21 +54,23 @@ router.put('/user', auth.required, (req, res, next) => {
 })
 
 // Login user
-router.post('/user/login', (req, res, next) => {
+router.post('/auth/login', (req, res, next) => {
   if (!req.body.user.email)
     return res.status(422).json({ errors: {email: 'cannot be blank'} })
 
   if (!req.body.user.password)
     return res.status(422).json({ errors: {password: 'cannot be blank'} })
 
-  passport.authenticate('local', { session: false }, (err, user, info) => {
+  passport.authenticate('local', { session: false }, function(err, user, info) {
     if (err)
       return next(err)
 
     if (user) {
       user.token = user.generateJWT()
 
-      return res.join({ user: user.toAuthJSON() })
+      return res.json({user: user.toAuthJSON()})
+    } else {
+      return res.status(422).json(info)
     }
   })(req, res, next)
 })
