@@ -16,7 +16,15 @@ router.param('username', (req, res, next, username) => {
 
 
 router.get('/:username', auth.optional, (req, res, next) => {
-  return res.json({profile: req.profile.toProfileJSONFor()})
+  if (req.payload) {
+    User.findById(req.payload.id).then(user => {
+      if (!user)
+        return res.json({profile: req.profile.toProfileJSONFor(false)})
+      else
+        return res.json({profile: req.profile.toProfileJSONFor(user)})
+    })
+  } else
+    return res.json({profile: req.profile.toProfileJSONFor(false)})
 })
 
 module.exports = router
