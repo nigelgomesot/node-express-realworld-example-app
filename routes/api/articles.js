@@ -50,7 +50,6 @@ router.get('/:article', auth.optional, (req, res, next) => {
 })
 
 // Update article
-
 router.put('/:article', auth.required, (req, res, next) => {
   User.findById(req.payload.id).then(user => {
     if (req.article.author._id.toString() === req.payload.id.toString()) {
@@ -65,6 +64,19 @@ router.put('/:article', auth.required, (req, res, next) => {
 
       req.article.save().then(article => res.json({article: article.toJSONFor(user)})
       ).catch(next)
+    } else {
+      return res.sendStatus(403)
+    }
+  })
+})
+
+// Delete article
+router.delete('/:article', auth.required, (req, res, next) => {
+  User.findById(req.payload.id).then(() => {
+    if (req.article.author._id.toString() === req.payload.id.toString()) {
+      return req.article.remove().then(() => {
+        return res.sendStatus(204)
+      })
     } else {
       return res.sendStatus(403)
     }
