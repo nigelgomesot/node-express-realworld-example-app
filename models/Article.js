@@ -34,6 +34,7 @@ ArticleSchema.methods.toJSONFor = function(user) {
     favoritesCount: this.favoritesCount,
     tagList: this.tagList,
     author: this.author.toProfileJSONFor(user),
+    favorited: this.author.isFavorite(this._id),
     createdAt: this.createdAt,
     updatedAt: this.updatedAt
   }
