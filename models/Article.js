@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 const uniqueValidator = require('mongoose-unique-validator')
 const slug = require('slug')
+const User = mongoose.model('User')
 
 var ArticleSchema = new mongoose.Schema({
   slug: {type: String, lowercase: true, unique: true},
@@ -40,5 +41,14 @@ ArticleSchema.methods.toJSONFor = function(user) {
   }
 }
 
-mongoose.model('Article', ArticleSchema)
+ArticleSchema.methods.updateFavoriteCount = function() {
+  const article = this
 
+  return User.count({favorites: {$in: [article._id]}}).then(count => {
+    article.favoritesCount = count
+
+    return article.save()
+  })
+}
+
+mongoose.model('Article', ArticleSchema)
