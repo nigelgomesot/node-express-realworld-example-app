@@ -16,8 +16,6 @@ router.post('/', auth.required, (req, res, next) => {
     article.author = user
 
     return article.save().then(() => {
-      console.log(`article created for author: ${article.author}`)
-
       return res.json({article: article.toJSONFor(user)})
     })
   }).catch(next)
@@ -31,7 +29,6 @@ router.param('article', (req, res, next, slug) => {
         return res.sendStatus(404)
 
         req.article = article
-        console.log(`article found for author: ${req.article.author}`)
 
         return next()
     }).catch(next)
@@ -81,6 +78,22 @@ router.delete('/:article', auth.required, (req, res, next) => {
       return res.sendStatus(403)
     }
   })
+})
+
+// Favorite article
+router.post('/:article/favorite', auth.required, (req, res, next) => {
+  const articleId = req.article._id
+
+  User.findById(req.payload.id).then(user => {
+    if (!user)
+      return res.sendStatus(401)
+
+    return user.addFavorite(articleId).then(() => {
+      return req.article.updateFavoriteCount().then(article => {
+        return res.json({article: article.toJSONFor(user)})
+      })
+    })
+  }).catch(next)
 })
 
 module.exports = router

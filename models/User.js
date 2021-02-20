@@ -59,9 +59,12 @@ UserSchema.methods.toProfileJSONFor = function(user) {
 }
 
 UserSchema.methods.addFavorite = function(articleId) {
-  if (this.favorites.indexOf(articleId) === -1)
-    this.favorites.push(articleId)
+  if (this.favorites.indexOf(articleId) === -1) {
+    console.log('>>>>>> addFavorite', 'articleId', articleId, 'this.favorites', this.favorites)
+    this.favorites.concat([articleId])
+  }
 
+  console.log('>>>>>> addFavorite AFTER', 'articleId', articleId, 'this.favorites', this.favorites)
   return this.save()
 }
 
@@ -73,7 +76,9 @@ UserSchema.methods.removeFavorite = function(articleId) {
 }
 
 UserSchema.methods.isFavorite = function(articleId) {
-  return this.favorites.indexOf(articleId) !== -1
+  return this.favorites.some((favoriteArticledId) => {
+    return favoriteArticledId.toString() === articleId.toString()
+  })
 }
 
 mongoose.model('User', UserSchema)
