@@ -3,6 +3,7 @@ var uniqueValidator = require('mongoose-unique-validator')
 var crypto = require('crypto')
 var jwt = require('jsonwebtoken')
 var secret = require('../config').secret
+// mongoose.set('debug', true)
 
 var UserSchema = new mongoose.Schema({
   username: { type: String, lowercase: true, unique: true, required: [true, 'cannot be blank'], match: [/^[a-zA-Z0-9]+$/, 'is invalid'], index: true },
@@ -61,7 +62,7 @@ UserSchema.methods.toProfileJSONFor = function(user) {
 UserSchema.methods.addFavorite = function(articleId) {
   if (this.favorites.indexOf(articleId) === -1) {
     console.log('>>>>>> addFavorite', 'articleId', articleId, 'this.favorites', this.favorites)
-    this.favorites.concat([articleId])
+    this.favorites.push(articleId)
   }
 
   console.log('>>>>>> addFavorite AFTER', 'articleId', articleId, 'this.favorites', this.favorites)

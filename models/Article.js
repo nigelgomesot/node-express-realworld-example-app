@@ -11,7 +11,7 @@ var ArticleSchema = new mongoose.Schema({
   favoritesCount: {type: Number, default: 0},
   tagList: [{type: String}],
   author: {type: mongoose.Schema.Types.ObjectId, ref: 'User'}
-}, {timestamps: true})
+}, { timestamps: true })
 
 ArticleSchema.plugin(uniqueValidator, {message: 'is already taken'})
 
