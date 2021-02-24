@@ -8,7 +8,7 @@ const CommentSchema = new mongoose.Schema({
 
 CommentSchema.methods.toJSONFor = function(user) {
   return {
-    id: this_.id,
+    id: this._id,
     body: this.body,
     createdAt: this.createdAt,
     author: this.author.toProfileJSONFor(user)

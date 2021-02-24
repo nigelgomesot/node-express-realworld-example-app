@@ -3,6 +3,7 @@ var passport = require('passport')
 var mongoose = require('mongoose')
 var User = mongoose.model('User')
 var Article = mongoose.model('Article')
+var Comment = mongoose.model('Comment')
 var auth = require('../auth')
 
 // Create article
@@ -111,5 +112,26 @@ router.delete('/:article/favorite', auth.required, (req, res, next) => {
     })
   }).catch(next)
 })
+
+// Add comment
+router.post('/:article/comments', auth.required, (req, res, next) => {
+  User.findById(req.payload.id).then(user => {
+    if (!user)
+      res.sendStatus(401)
+
+    const comment = new Comment(req.body.comment)
+    comment.article = req.article
+    comment.author = user
+
+    return comment.save().then(() => {
+      req.article.comments.push(comment)
+
+      return req.article.save().then(article => {
+        res.json({comment: comment.toJSONFor(user)})
+      })
+    })
+  }).catch(next)
+})
+
 
 module.exports = router
