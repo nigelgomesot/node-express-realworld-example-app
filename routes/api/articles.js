@@ -133,5 +133,26 @@ router.post('/:article/comments', auth.required, (req, res, next) => {
   }).catch(next)
 })
 
+// List comments
+router.get('/:article/comments', auth.optional, (req, res, next) => {
+  Promise.resolve(req.payload ? User.findById(req.payload.id) : null).then(user => {
+    return req.article.populate({
+      path: 'comments',
+      populate: {
+          path: 'author'
+      },
+      options: {
+        sort: {
+          createdAt: 'desc'
+        }
+      }
+    }).execPopulate().then(article => {
+      return res.json({comments: req.article.comments.map(comment => {
+        return comment.toJSONFor(user)
+      })})
+    })
+  }).catch(next)
+})
+
 
 module.exports = router
