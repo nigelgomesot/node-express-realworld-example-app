@@ -35,6 +35,18 @@ router.param('article', (req, res, next, slug) => {
     }).catch(next)
 })
 
+router.param('commentId', (req, res, next, commentId) => {
+  Comment.findById(commentId).then(comment => {
+    if (!comment)
+      return res.sendStatus(404)
+
+    req.comment = comment
+
+    return next()
+  }).catch(next)
+})
+
+
 // Get article
 router.get('/:article', auth.optional, (req, res, next) => {
   Promise.all([
@@ -154,5 +166,24 @@ router.get('/:article/comments', auth.optional, (req, res, next) => {
   }).catch(next)
 })
 
+// Delete comment
+router.delete('/:article/comments/:commentId', auth.required, (req, res, next) => {
+  User.findById(req.payload.id).then(user => {
+    if (!user)
+      res.sendStatus(401)
+
+    if (req.comment.author.toString() === req.payload.id.toString()) {
+      req.article.comments.remove(req.comment._id)
+
+      req.article.save()
+        .then(Comment.find({_id: req.comment._id}).remove().exec())
+        .then(() => {
+          res.sendStatus(204)
+        })
+    } else {
+      res.sendStatus(403)
+    }
+  })
+})
 
 module.exports = router
