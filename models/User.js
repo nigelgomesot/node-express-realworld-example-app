@@ -12,7 +12,8 @@ var UserSchema = new mongoose.Schema({
   image: String,
   hash: String,
   salt: String,
-  favorites: [{type: mongoose.Schema.Types.ObjectId, ref: 'Article'}]
+  favorites: [{type: mongoose.Schema.Types.ObjectId, ref: 'Article'}],
+  following: [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}]
 }, { timestamps: true } )
 
 UserSchema.plugin(uniqueValidator, { message: 'is already taken' })
@@ -55,17 +56,15 @@ UserSchema.methods.toProfileJSONFor = function(user) {
     username: this.username,
     bio: this.bio,
     image: this.image || 'https://static.productionready.io/images/smiley-cyrus.jpg',
-    following: false
+    following: user ? user.isFollowing(this._id) : false
   }
 }
 
 UserSchema.methods.addFavorite = function(articleId) {
   if (this.favorites.indexOf(articleId) === -1) {
-    console.log('>>>>>> addFavorite', 'articleId', articleId, 'this.favorites', this.favorites)
     this.favorites.push(articleId)
   }
 
-  console.log('>>>>>> addFavorite AFTER', 'articleId', articleId, 'this.favorites', this.favorites)
   return this.save()
 }
 
@@ -81,5 +80,28 @@ UserSchema.methods.isFavorite = function(articleId) {
     return favoriteArticledId.toString() === articleId.toString()
   })
 }
+
+UserSchema.methods.follow = function(otherUserId) {
+  if (this.following.indexOf(otherUserId) === -1) {
+    this.following.push(otherUserId)
+
+    return this.save()
+  }
+}
+
+UserSchema.methods.unFollow = function(otherUserId) {
+  if (this.following.indexOf(otherUserId) != -1) {
+    this.following.remove(otherUserId)
+
+    return this.save()
+  }
+}
+
+UserSchema.methods.isFollowing = function(otherUserId) {
+  return this.following.some(followId => {
+    return followId.toString() === otherUserId.toString()
+  })
+}
+
 
 mongoose.model('User', UserSchema)
