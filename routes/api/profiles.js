@@ -41,4 +41,18 @@ router.post('/:username/follow', auth.required, (req, res, next) => {
   }).catch(next)
 })
 
+// Unfollow user
+router.delete('/:username/follow', auth.required, (req, res, next) => {
+  const profileId = req.profile._id
+
+  User.findById(req.payload.id).then(user => {
+    if (!user)
+      return res.sendStatus(401)
+
+    return user.unFollow(profileId).then(() => {
+      return res.json({profile: req.profile.toProfileJSONFor(user)})
+    })
+  }).catch(next)
+})
+
 module.exports = router
