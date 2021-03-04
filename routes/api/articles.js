@@ -186,4 +186,38 @@ router.delete('/:article/comments/:commentId', auth.required, (req, res, next) =
   })
 })
 
+// List articles
+router.get('/', auth.optional, (req, res, next) => {
+  const query = {}
+
+  let limit = 20,
+      offset = 0
+
+  if (typeof req.query.limit !== 'undefined')
+    limit = req.query.limit
+
+  if (typeof req.query.offset !== 'undefined')
+    offset = req.query.offset
+
+  return Promise.all([
+    Article.find(query)
+      .limit(Number(limit))
+      .skip(Number(offset))
+      .sort({createdAt: 'desc'})
+      .populate('author')
+      .exec(),
+    Article.count(query).exec(),
+    req.payload ? User.findById(req.payload.id) : null
+  ]).then(results => {
+    const articles = results[0],
+          articlesCount = results[1],
+          user = results[2]
+
+    return res.json({
+      articles: articles.map(article => article.toJSONFor(user)),
+      articlesCount: articlesCount
+    })
+  }).catch(next)
+})
+
 module.exports = router
