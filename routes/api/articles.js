@@ -202,23 +202,39 @@ router.get('/', auth.optional, (req, res, next) => {
   if(typeof req.query.tag !== 'undefined')
     query.tagList = { "$in": [req.query.tag] }
 
-  return Promise.all([
-    Article.find(query)
-      .limit(Number(limit))
-      .skip(Number(offset))
-      .sort({createdAt: 'desc'})
-      .populate('author')
-      .exec(),
-    Article.count(query).exec(),
-    req.payload ? User.findById(req.payload.id) : null
+  Promise.all([
+    req.query.author ? User.findOne({username: req.query.author}) : null,
+    req.query.favorited ? User.findOne({username: req.query.favorited}) : null
   ]).then(results => {
-    const articles = results[0],
-          articlesCount = results[1],
-          user = results[2]
+    const author = results[0],
+          favoriter = results[1]
 
-    return res.json({
-      articles: articles.map(article => article.toJSONFor(user)),
-      articlesCount: articlesCount
+    if (author)
+      query.author = author._id
+
+    if (favoriter)
+      query._id = {$in: favoriter.favorites}
+    else if (req.query.favorited)
+      query._id = {$in: []}
+
+    return Promise.all([
+      Article.find(query)
+        .limit(Number(limit))
+        .skip(Number(offset))
+        .sort({createdAt: 'desc'})
+        .populate('author')
+        .exec(),
+      Article.count(query).exec(),
+      req.payload ? User.findById(req.payload.id) : null
+    ]).then(results => {
+      const articles = results[0],
+            articlesCount = results[1],
+            user = results[2]
+
+      return res.json({
+        articles: articles.map(article => article.toJSONFor(user)),
+        articlesCount: articlesCount
+      })
     })
   }).catch(next)
 })
