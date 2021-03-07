@@ -6,6 +6,42 @@ var Article = mongoose.model('Article')
 var Comment = mongoose.model('Comment')
 var auth = require('../auth')
 
+// Get feed
+router.get('/feed', auth.required, (req, res, next) => {
+  let limit = 20,
+      offset = 0
+
+  if (typeof req.query.limit !== 'undefined')
+    limit = req.query.limit
+
+  if (typeof req.query.offset !== 'undefined')
+    limit = req.query.offset
+
+  User.findById(req.payload.id).then(user => {
+    if (!user)
+      return res.sendStatus(401)
+
+    Promise.all([
+      Article.find({author: {$in: user.following}})
+        .limit(Number(limit))
+        .skip(Number(offset))
+        .populate('author')
+        .exec(),
+      Article.count({author: {$in: user.following}})
+    ]).then(results => {
+      const articles = results[0],
+            articlesCount = results[1]
+
+      return res.json({
+        articles: articles.map(article => {
+          return article.toJSONFor(user)
+        }),
+        articlesCount: articlesCount
+      })
+    }).catch(next)
+  })
+})
+
 // Create article
 router.post('/', auth.required, (req, res, next) => {
   User.findById(req.payload.id).then(user => {
